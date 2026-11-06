@@ -57,8 +57,8 @@ over SMTP by configuring the DSN in your ``.env`` file (the ``user``,
         use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
         use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-        return static function (ContainerConfigurator $containerConfigurator): void {
-            $containerConfigurator->extension('framework', [
+        return static function (ContainerConfigurator $container): void {
+            $container->extension('framework', [
                 'mailer' => [
                     'dsn' => env('MAILER_DSN'),
                 ],
@@ -164,20 +164,49 @@ transport, but you can force to use one:
 This table shows the full list of available DSN formats for each third
 party provider:
 
-===================== ==================================================== =========================================== ========================================
-Provider              SMTP                                                 HTTP                                        API
-===================== ==================================================== =========================================== ========================================
-`Amazon SES`_         ses+smtp://USERNAME:PASSWORD@default                 ses+https://ACCESS_KEY:SECRET_KEY@default   ses+api://ACCESS_KEY:SECRET_KEY@default
-`Google Gmail`_       gmail+smtp://USERNAME:APP-PASSWORD@default           n/a                                         n/a
-`Infobip`_            infobip+smtp://KEY@default                           n/a                                         infobip+api://KEY@BASE_URL
-`Mailchimp Mandrill`_ mandrill+smtp://USERNAME:PASSWORD@default            mandrill+https://KEY@default                mandrill+api://KEY@default
-`Mailgun`_            mailgun+smtp://USERNAME:PASSWORD@default             mailgun+https://KEY:DOMAIN@default          mailgun+api://KEY:DOMAIN@default
-`Mailjet`_            mailjet+smtp://ACCESS_KEY:SECRET_KEY@default         n/a                                         mailjet+api://ACCESS_KEY:SECRET_KEY@default
-`MailPace`_           mailpace+api://API_TOKEN@default                     n/a                                         mailpace+api://API_TOKEN@default
-`Postmark`_           postmark+smtp://ID@default                           n/a                                         postmark+api://KEY@default
-`Sendgrid`_           sendgrid+smtp://KEY@default                          n/a                                         sendgrid+api://KEY@default
-`Sendinblue`_         sendinblue+smtp://USERNAME:PASSWORD@default          n/a                                         sendinblue+api://KEY@default
-===================== ==================================================== =========================================== ========================================
++------------------------+-----------------------------------------------------+
+| Provider               | Formats                                             |
++========================+=====================================================+
+| `Amazon SES`_          | - SMTP ses+smtp://USERNAME:PASSWORD@default         |
+|                        | - HTTP ses+https://ACCESS_KEY:SECRET_KEY@default    |
+|                        | - API ses+api://ACCESS_KEY:SECRET_KEY@default       |
++------------------------+-----------------------------------------------------+
+| `Google Gmail`_        | - SMTP gmail+smtp://USERNAME:APP-PASSWORD@default   |
+|                        | - HTTP n/a                                          |
+|                        | - API n/a                                           |
++------------------------+-----------------------------------------------------+
+| `Infobip`_             | - SMTP infobip+smtp://KEY@default                   |
+|                        | - HTTP n/a                                          |
+|                        | - API infobip+api://KEY@BASE_URL                    |
++------------------------+-----------------------------------------------------+
+| `Mailchimp Mandrill`_  | - SMTP mandrill+smtp://USERNAME:PASSWORD@default    |
+|                        | - HTTP mandrill+https://KEY@default                 |
+|                        | - API mandrill+api://KEY@default                    |
++------------------------+-----------------------------------------------------+
+| `Mailgun`_             | - SMTP mailgun+smtp://USERNAME:PASSWORD@default     |
+|                        | - HTTP mailgun+https://KEY:DOMAIN@default           |
+|                        | - API mailgun+api://KEY:DOMAIN@default              |
++------------------------+-----------------------------------------------------+
+| `Mailjet`_             | - SMTP mailjet+smtp://ACCESS_KEY:SECRET_KEY@default |
+|                        | - HTTP n/a                                          |
+|                        | - API mailjet+api://ACCESS_KEY:SECRET_KEY@default   |
++------------------------+-----------------------------------------------------+
+| `MailPace`_            | - SMTP mailpace+api://API_TOKEN@default             |
+|                        | - HTTP n/a                                          |
+|                        | - API mailpace+api://API_TOKEN@default              |
++------------------------+-----------------------------------------------------+
+| `Postmark`_            | - SMTP postmark+smtp://ID@default                   |
+|                        | - HTTP n/a                                          |
+|                        | - API postmark+api://KEY@default                    |
++------------------------+-----------------------------------------------------+
+| `Sendgrid`_            | - SMTP sendgrid+smtp://KEY@default                  |
+|                        | - HTTP n/a                                          |
+|                        | - API sendgrid+api://KEY@default                    |
++------------------------+-----------------------------------------------------+
+| `Sendinblue`_          | - SMTP sendinblue+smtp://USERNAME:PASSWORD@default  |
+|                        | - HTTP n/a                                          |
+|                        | - API sendinblue+api://KEY@default                  |
++------------------------+-----------------------------------------------------+
 
 .. caution::
 
@@ -196,6 +225,12 @@ Provider              SMTP                                                 HTTP 
 
     When using SMTP, the default timeout for sending a message before throwing an
     exception is the value defined in the `default_socket_timeout`_ PHP.ini option.
+
+.. note::
+
+    Besides SMTP, many 3rd party transports offer a web API to send emails.
+    To do so, you have to install (additionally to the bridge)
+    the HttpClient component via ``composer require symfony/http-client``.
 
 .. note::
 
@@ -601,7 +636,7 @@ and headers.
         // config/packages/mailer.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $mailer = $framework->mailer();
             $mailer
                 ->envelope()
@@ -813,7 +848,7 @@ image files as usual. First, to simplify things, define a Twig namespace called
         // config/packages/twig.php
         use Symfony\Config\TwigConfig;
 
-        return static function (TwigConfig $twig) {
+        return static function (TwigConfig $twig): void {
             // ...
 
             // point this wherever your images live
@@ -922,7 +957,7 @@ called ``styles`` that points to the directory where ``email.css`` lives:
         // config/packages/twig.php
         use Symfony\Config\TwigConfig;
 
-        return static function (TwigConfig $twig) {
+        return static function (TwigConfig $twig): void {
             // ...
 
             // point this wherever your css files live
@@ -1033,6 +1068,15 @@ Before signing/encrypting messages, make sure to have:
 
     When using OpenSSL to generate certificates, make sure to add the
     ``-addtrust emailProtection`` command option.
+
+.. caution::
+
+    Signing and encrypting messages require their contents to be fully rendered.
+    For example, the content of :ref:`templated emails <mailer-twig>` is rendered
+    by a :class:`Symfony\\Component\\Mailer\\EventListener\\MessageListener`.
+    So, if you want to sign and/or encrypt such a message, you need to do it in
+    a :ref:`MessageEvent <messageevent>` listener run after it (you need to set
+    a negative priority to your listener).
 
 Signing Messages
 ~~~~~~~~~~~~~~~~
@@ -1206,7 +1250,7 @@ This can be configured by replacing the ``dsn`` configuration entry with a
         use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->mailer()
                 ->transport('main', env('MAILER_DSN'))
                 ->transport('alternative', env('MAILER_DSN_IMPORTANT'))
@@ -1279,7 +1323,7 @@ you have a transport called ``async``, you can route the message there:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->messenger()
                 ->transport('async')->dsn(env('MESSENGER_TRANSPORT_DSN'));
 
@@ -1310,7 +1354,7 @@ render the email before calling ``$mailer->send($email)``::
     use Symfony\Component\Mailer\MailerInterface;
     use Symfony\Component\Mime\BodyRendererInterface;
 
-    public function action(MailerInterface $mailer, BodyRendererInterface $bodyRenderer)
+    public function action(MailerInterface $mailer, BodyRendererInterface $bodyRenderer): void
     {
         $email = (new TemplatedEmail())
             ->htmlTemplate($template)
@@ -1359,7 +1403,7 @@ disable asynchronous delivery.
         // config/packages/mailer.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->mailer()
                 ->messageBus('app.another_bus');
         };
@@ -1378,7 +1422,7 @@ disable asynchronous delivery.
     method was made public in Symfony 6.1.
 
 You can also select the transport by adding an ``X-Bus-Transport`` header (which
-will be remove automatically from the final message)::
+will be removed automatically from the final message)::
 
     // Use the bus transport "app.another_bus":
     $email->getHeaders()->addTextHeader('X-Bus-Transport', 'app.another_bus');
@@ -1514,13 +1558,6 @@ the email is sent::
 .. versionadded:: 6.2
 
     Methods ``addStamp()`` and ``getStamps()`` were introduced in Symfony 6.2.
-
-.. tip::
-
-    When using a ``MessageEvent`` listener to
-    :doc:`sign the email contents <signing-and-encrypting-messages>`, run it as
-    late as possible (e.g. setting a negative priority for it) so the email
-    contents are not set or modified after signing them.
 
 Execute this command to find out which listeners are registered for this event
 and their priorities:
@@ -1666,7 +1703,7 @@ the mailer configuration file (e.g. in the ``dev`` or ``test`` environments):
         // config/packages/mailer.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->mailer()
                 ->dsn('null://null');
@@ -1720,7 +1757,7 @@ a specific address, instead of the *real* address:
         // config/packages/mailer.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->mailer()
                 ->envelope()
@@ -1744,7 +1781,7 @@ the :class:`Symfony\\Bundle\\FrameworkBundle\\Test\\MailerAssertionsTrait`::
 
     class MailControllerTest extends WebTestCase
     {
-        public function testMailIsSentAndContentIsOk()
+        public function testMailIsSentAndContentIsOk(): void
         {
             $client = static::createClient();
             $client->request('GET', '/mail/send');

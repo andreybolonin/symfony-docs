@@ -149,7 +149,7 @@ application:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             // 'main' is the name of the firewall (can be chosen freely)
@@ -475,7 +475,7 @@ option if you need to use a custom CSRF token generator.
 csrf_parameter
 ..............
 
-**type**: ``string`` **default**: ``'_csrf_token'``
+**type**: ``string`` **default**: ``_csrf_token``
 
 The name of the parameter that stores the CSRF token value.
 
@@ -490,7 +490,7 @@ default service whose ID is ``security.csrf.token_manager``.
 csrf_token_id
 .............
 
-**type**: ``string`` **default**: ``'logout'``
+**type**: ``string`` **default**: ``logout``
 
 An arbitrary string used to identify the token (and check its validity afterwards).
 
@@ -572,7 +572,7 @@ The security configuration should be:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->lazy(true);
             $mainFirewall->jsonLogin()
@@ -697,7 +697,7 @@ X.509 Authentication
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->x509()
                 ->provider('your_user_provider')
@@ -768,7 +768,7 @@ Remote User Authentication
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->remoteUser()
                 ->provider('your_user_provider')
@@ -849,7 +849,7 @@ multiple firewalls, the "context" could actually be shared:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $security->firewall('somename')
                 // ...
                 ->context('my_context')
@@ -911,7 +911,7 @@ the session must not be used when authenticating users:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->stateless(true);
             // ...
@@ -970,7 +970,7 @@ Firewalls can configure a list of required badges that must be present on the au
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->requiredBadges(['CsrfTokenBadge', 'My\Badge']);
             // ...

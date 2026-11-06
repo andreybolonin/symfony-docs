@@ -10,7 +10,7 @@ The following example shows a typical usage of the cache::
     use Symfony\Contracts\Cache\ItemInterface;
 
     // The callable will only be executed on a cache miss.
-    $value = $pool->get('my_cache_key', function (ItemInterface $item) {
+    $value = $pool->get('my_cache_key', function (ItemInterface $item): string {
         $item->expiresAfter(3600);
 
         // ... do some HTTP request or heavy computations
@@ -85,7 +85,7 @@ adapter (template) they use by using the ``app`` and ``system`` key like:
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 ->app('cache.adapter.filesystem')
                 ->system('cache.adapter.system')
@@ -163,7 +163,7 @@ will create pools with service IDs that follow the pattern ``cache.[type]``.
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 // Only used with cache.adapter.filesystem
                 ->directory('%kernel.cache_dir%/pools')
@@ -264,7 +264,7 @@ You can also create more customized pools:
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $cache = $framework->cache();
             $cache->defaultMemcachedProvider('memcached://localhost');
 
@@ -307,15 +307,16 @@ with either :class:`Symfony\\Contracts\\Cache\\CacheInterface` or
 ``Psr\Cache\CacheItemPoolInterface``::
 
     use Symfony\Contracts\Cache\CacheInterface;
+    // ...
 
     // from a controller method
-    public function listProducts(CacheInterface $customThingCache)
+    public function listProducts(CacheInterface $customThingCache): Response
     {
         // ...
     }
 
     // in a service
-    public function __construct(CacheInterface $customThingCache)
+    public function __construct(private CacheInterface $customThingCache)
     {
         // ...
     }
@@ -363,8 +364,8 @@ with either :class:`Symfony\\Contracts\\Cache\\CacheInterface` or
             // config/services.php
             namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-            return function(ContainerConfigurator $containerConfigurator) {
-                $containerConfigurator->services()
+            return function(ContainerConfigurator $container): void {
+                $container->services()
                     // ...
 
                     ->set('app.cache.adapter.redis')
@@ -444,14 +445,14 @@ and use that when configuring the pool.
         use Symfony\Component\DependencyInjection\ContainerBuilder;
         use Symfony\Config\FrameworkConfig;
 
-        return static function (ContainerBuilder $containerBuilder, FrameworkConfig $framework) {
+        return static function (ContainerBuilder $container, FrameworkConfig $framework): void {
             $framework->cache()
                 ->pool('cache.my_redis')
                     ->adapters(['cache.adapter.redis'])
                     ->provider('app.my_custom_redis_provider');
 
 
-            $containerBuilder->register('app.my_custom_redis_provider', \Redis::class)
+            $container->register('app.my_custom_redis_provider', \Redis::class)
                 ->setFactory([RedisAdapter::class, 'createConnection'])
                 ->addArgument('redis://localhost')
                 ->addArgument([
@@ -524,7 +525,7 @@ Symfony stores the item automatically in all the missing pools.
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 ->pool('my_cache_pool')
                     ->defaultLifetime(31536000) // One year
@@ -555,15 +556,15 @@ the same key could be invalidated with one function call::
         ) {
         }
 
-        public function someMethod()
+        public function someMethod(): void
         {
-            $value0 = $this->myCachePool->get('item_0', function (ItemInterface $item) {
+            $value0 = $this->myCachePool->get('item_0', function (ItemInterface $item): string {
                 $item->tag(['foo', 'bar']);
 
                 return 'debug';
             });
 
-            $value1 = $this->myCachePool->get('item_1', function (ItemInterface $item) {
+            $value1 = $this->myCachePool->get('item_1', function (ItemInterface $item): string {
                 $item->tag('foo');
 
                 return 'debug';
@@ -616,7 +617,7 @@ to enable this feature. This could be added by using the following configuration
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 ->pool('my_cache_pool')
                     ->tags(true)
@@ -670,7 +671,7 @@ achieved by specifying the adapter.
         // config/packages/cache.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 ->pool('my_cache_pool')
                     ->tags('tag_pool')

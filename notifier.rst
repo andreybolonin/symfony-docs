@@ -149,7 +149,7 @@ configure the ``texter_transports``:
         // config/packages/notifier.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->notifier()
                 ->texterTransport('twilio', env('TWILIO_DSN'))
             ;
@@ -163,6 +163,7 @@ send SMS messages::
     // src/Controller/SecurityController.php
     namespace App\Controller;
 
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Notifier\Message\SmsMessage;
     use Symfony\Component\Notifier\TexterInterface;
     use Symfony\Component\Routing\Annotation\Route;
@@ -170,7 +171,7 @@ send SMS messages::
     class SecurityController
     {
         #[Route('/login/success')]
-        public function loginSuccess(TexterInterface $texter)
+        public function loginSuccess(TexterInterface $texter): Response
         {
             $sms = new SmsMessage(
                 // the phone number to send the SMS message to
@@ -279,7 +280,7 @@ Chatters are configured using the ``chatter_transports`` setting:
         // config/packages/notifier.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->notifier()
                 ->chatterTransport('slack', env('SLACK_DSN'))
             ;
@@ -294,6 +295,7 @@ you to send messages to chat services::
     namespace App\Controller;
 
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Notifier\ChatterInterface;
     use Symfony\Component\Notifier\Message\ChatMessage;
     use Symfony\Component\Routing\Annotation\Route;
@@ -303,7 +305,7 @@ you to send messages to chat services::
         /**
          * @Route("/checkout/thankyou")
          */
-        public function thankyou(ChatterInterface $chatter)
+        public function thankyou(ChatterInterface $chatter): Response
         {
             $message = (new ChatMessage('You got a new invoice for 15 EUR.'))
                 // if not set explicitly, the message is sent to the
@@ -378,7 +380,7 @@ notification emails:
         // config/packages/mailer.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->mailer()
                 ->dsn(env('MAILER_DSN'))
                 ->envelope()
@@ -458,7 +460,7 @@ configure the ``texter_transports``:
         // config/packages/notifier.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->notifier()
                 ->texterTransport('expo', env('EXPO_DSN'))
             ;
@@ -520,7 +522,7 @@ transport:
         // config/packages/notifier.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->notifier()
                 // Send notifications to Slack and use Telegram if
                 // Slack errored
@@ -543,6 +545,7 @@ To send a notification, autowire the
     // src/Controller/InvoiceController.php
     namespace App\Controller;
 
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Notifier\Notification\Notification;
     use Symfony\Component\Notifier\NotifierInterface;
     use Symfony\Component\Notifier\Recipient\Recipient;
@@ -550,7 +553,7 @@ To send a notification, autowire the
     class InvoiceController extends AbstractController
     {
         #[Route('/invoice/create')]
-        public function create(NotifierInterface $notifier)
+        public function create(NotifierInterface $notifier): Response
         {
             // ...
 
@@ -657,7 +660,7 @@ specify what channels should be used for specific levels (using
         // config/packages/notifier.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->notifier()
                 // Use SMS, Slack and email for urgent notifications
@@ -677,7 +680,7 @@ sent using the Slack transport::
     class InvoiceController extends AbstractController
     {
         #[Route('/invoice/create')]
-        public function invoice(NotifierInterface $notifier)
+        public function invoice(NotifierInterface $notifier): Response
         {
             // ...
 
@@ -712,7 +715,7 @@ very high and the recipient has a phone number::
         ) {
         }
 
-        public function getChannels(RecipientInterface $recipient)
+        public function getChannels(RecipientInterface $recipient): array
         {
             if (
                 $this->price > 10000
@@ -881,7 +884,7 @@ dispatched. Listeners receive a
 
     use Symfony\Component\Notifier\Event\MessageEvent;
 
-    $dispatcher->addListener(MessageEvent::class, function (MessageEvent $event) {
+    $dispatcher->addListener(MessageEvent::class, function (MessageEvent $event): void {
         // gets the message instance
         $message = $event->getMessage();
 
@@ -904,7 +907,7 @@ Listeners receive a
 
     use Symfony\Component\Notifier\Event\FailedMessageEvent;
 
-    $dispatcher->addListener(FailedMessageEvent::class, function (FailedMessageEvent $event) {
+    $dispatcher->addListener(FailedMessageEvent::class, function (FailedMessageEvent $event): void {
         // gets the message instance
         $message = $event->getMessage();
 
@@ -927,7 +930,7 @@ is dispatched. Listeners receive a
 
     use Symfony\Component\Notifier\Event\SentMessageEvent;
 
-    $dispatcher->addListener(SentMessageEvent::class, function (SentMessageEvent $event) {
+    $dispatcher->addListener(SentMessageEvent::class, function (SentMessageEvent $event): void {
         // gets the message instance
         $message = $event->getOriginalMessage();
 

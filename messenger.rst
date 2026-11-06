@@ -96,11 +96,12 @@ You're ready! To dispatch the message (and call the handler), inject the
 
     use App\Message\SmsNotification;
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Messenger\MessageBusInterface;
 
     class DefaultController extends AbstractController
     {
-        public function index(MessageBusInterface $bus)
+        public function index(MessageBusInterface $bus): Response
         {
             // will cause the SmsNotificationHandler to be called
             $bus->dispatch(new SmsNotification('Look! I created a message!'));
@@ -184,7 +185,7 @@ that uses this configuration:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->messenger()
                 ->transport('async')
                     ->dsn(env('MESSENGER_TRANSPORT_DSN'))
@@ -246,7 +247,7 @@ you can configure them to be sent to a transport:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->messenger()
                 // async is whatever name you gave your transport above
                 ->routing('App\Message\SmsNotification')->senders(['async'])
@@ -258,6 +259,10 @@ transport and its handler(s) will *not* be called immediately. Any messages not
 matched under ``routing`` will still be handled immediately, i.e. synchronously.
 
 .. note::
+
+    You may use a partial PHP namespace like ``'App\Message\*'`` to match all
+    the messages within the matching namespace. The only requirement is that the
+    ``'*'`` wildcard has to be placed at the end of the namespace.
 
     You may use ``'*'`` as the message class. This will act as a default routing
     rule for any message not matched under ``routing``. This is useful to ensure
@@ -319,7 +324,7 @@ to multiple transports:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
             // route all messages that extend this example base class or interface
             $messenger->routing('App\Message\AbstractAsyncMessage')->senders(['async']);
@@ -388,7 +393,7 @@ Then, in your handler, you can query for a fresh object::
         ) {
         }
 
-        public function __invoke(NewUserWelcomeEmail $welcomeEmail)
+        public function __invoke(NewUserWelcomeEmail $welcomeEmail): void
         {
             $user = $this->userRepository->find($welcomeEmail->getUserId());
 
@@ -452,7 +457,7 @@ transport and "sending" messages there to be handled immediately:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             // ... other transports
@@ -606,7 +611,7 @@ different messages to them. For example:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->transport('async_priority_high')
@@ -944,7 +949,7 @@ this is configurable for each transport:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->transport('async_priority_high')
@@ -1045,7 +1050,7 @@ be discarded. To avoid this happening, you can instead configure a ``failure_tra
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             // after retrying, messages will be sent to the "failed" transport
@@ -1163,7 +1168,7 @@ override the failure transport for only specific transports:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             // after retrying, messages will be sent to the "failed" transport
@@ -1255,7 +1260,7 @@ options. Options can be passed to the transport via a DSN string or configuratio
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->transport('my_transport')
@@ -1674,7 +1679,7 @@ override it in the ``test`` environment to use this transport:
         // config/packages/test/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->transport('async_priority_normal')
@@ -1693,7 +1698,7 @@ during a request::
 
     class DefaultControllerTest extends WebTestCase
     {
-        public function testSomething()
+        public function testSomething(): void
         {
             $client = static::createClient();
             // ...
@@ -1851,7 +1856,7 @@ this globally (or for each transport) to a service that implements
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->serializer()
@@ -1896,7 +1901,7 @@ You can configure your handler by passing options to the attribute::
     #[AsMessageHandler(fromTransport: 'async', priority: 10)]
     class SmsNotificationHandler
     {
-        public function __invoke(SmsNotification $message)
+        public function __invoke(SmsNotification $message): void
         {
             // ...
         }
@@ -1990,13 +1995,13 @@ A single handler class can handle multiple messages. For that add the
     class SmsNotificationHandler
     {
         #[AsMessageHandler]
-        public function handleSmsNotification(SmsNotification $message)
+        public function handleSmsNotification(SmsNotification $message): void
         {
             // ...
         }
 
         #[AsMessageHandler]
-        public function handleOtherSmsNotification(OtherSmsNotification $message)
+        public function handleOtherSmsNotification(OtherSmsNotification $message): void
         {
             // ...
         }
@@ -2035,7 +2040,7 @@ To do this, add the ``from_transport`` option to each handler. For example::
     #[AsMessageHandler(fromTransport: 'image_transport')]
     class ThumbnailUploadedImageHandler
     {
-        public function __invoke(UploadedImage $uploadedImage)
+        public function __invoke(UploadedImage $uploadedImage): void
         {
             // do some thumbnailing
         }
@@ -2099,7 +2104,7 @@ Then, make sure to "route" your message to *both* transports:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $messenger->transport('async_priority_normal')->dsn('...');
@@ -2142,7 +2147,7 @@ provided in order to ease the declaration of these special handlers::
     {
         use BatchHandlerTrait;
 
-        public function __invoke(MyMessage $message, Acknowledger $ack = null)
+        public function __invoke(MyMessage $message, Acknowledger $ack = null): mixed
         {
             return $this->handle($message, $ack);
         }
@@ -2197,7 +2202,7 @@ to your message::
     use Symfony\Component\Messenger\MessageBusInterface;
     use Symfony\Component\Messenger\Stamp\DelayStamp;
 
-    public function index(MessageBusInterface $bus)
+    public function index(MessageBusInterface $bus): void
     {
         $bus->dispatch(new SmsNotification('...'), [
             // wait 5 seconds before processing
@@ -2301,7 +2306,7 @@ middleware and *only* include your own:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $bus = $messenger->bus('messenger.bus.default')
@@ -2391,7 +2396,7 @@ may want to use:
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $bus = $messenger->bus('command_bus');
@@ -2457,7 +2462,7 @@ to configure the validation groups.
         // config/packages/messenger.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $messenger = $framework->messenger();
 
             $bus = $messenger->bus('command_bus');
@@ -2484,7 +2489,7 @@ of the process. For each, the event class is the event name:
 
 .. versionadded:: 6.2
 
-    The ``WorkerRateLimitedEvent`` was introduced in Symfony 6.3.
+    The ``WorkerRateLimitedEvent`` was introduced in Symfony 6.2.
 
 Multiple Buses, Command & Event Buses
 -------------------------------------

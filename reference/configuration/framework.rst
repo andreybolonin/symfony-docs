@@ -1,5 +1,3 @@
-.. _framework-bundle-configuration:
-
 Framework Configuration Reference (FrameworkBundle)
 ===================================================
 
@@ -23,6 +21,8 @@ configured under the ``framework`` key in your application configuration.
 
 Configuration
 -------------
+
+.. _configuration-framework-secret:
 
 secret
 ~~~~~~
@@ -171,18 +171,35 @@ bootstrap the Symfony framework on a cache hit.
 
     The ``terminate_on_cache_hit`` option was introduced in Symfony 6.2.
 
+.. deprecated:: 6.2
+
+    Setting the ``terminate_on_cache_hit`` option to ``true`` was deprecated in
+    Symfony 6.2 and the option will be removed in Symfony 7.0.
+
  .. _configuration-framework-http_method_override:
 
 http_method_override
 ~~~~~~~~~~~~~~~~~~~~
 
-**type**: ``boolean`` **default**: ``true``
+**type**: ``boolean`` **default**: (see explanation below)
 
 This determines whether the ``_method`` request parameter is used as the
 intended HTTP method on POST requests. If enabled, the
 :method:`Request::enableHttpMethodParameterOverride <Symfony\\Component\\HttpFoundation\\Request::enableHttpMethodParameterOverride>`
 method gets called automatically. It becomes the service container parameter
 named ``kernel.http_method_override``.
+
+The **default value** is:
+
+* ``true``, if you have an existing application that you've upgraded from an older
+  Symfony version without resyncing the :doc:`Symfony Flex </setup/flex>` recipes;
+* ``false``, if you've created a new Symfony application or updated the Symfony
+  Flex recipes. This is also the default value starting from Symfony 7.0.
+
+.. deprecated:: 6.1
+
+    Not setting a value explicitly for this option is deprecated since Symfony 6.1
+    because the default value will change to ``false`` in Symfony 7.0.
 
 .. seealso::
 
@@ -206,7 +223,6 @@ named ``kernel.http_method_override``.
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $request = Request::createFromGlobals();
         // ...
-
 
  .. _configuration-framework-http_method_override:
 
@@ -296,7 +312,7 @@ doubling them to prevent Symfony from interpreting them as container parameters)
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->ide('myide://open?url=file://%%f&line=%%l');
         };
 
@@ -425,7 +441,7 @@ performance a bit:
         // config/packages/translation.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->enabledLocales(['en', 'es']);
         };
 
@@ -462,6 +478,8 @@ If ``true``, Symfony adds a ``X-Robots-Tag: noindex`` HTTP tag to all responses
 `X-Robots-Tag HTTP header`_ tells search engines to not index your web site.
 This option is a protection measure in case you accidentally publish your site
 in debug mode.
+
+.. _configuration-framework-trusted-hosts:
 
 trusted_hosts
 ~~~~~~~~~~~~~
@@ -518,7 +536,7 @@ the application won't respond and the user will receive a 400 response.
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->trustedHosts(['^example\.com$', '^example\.org$']);
         };
 
@@ -622,7 +640,7 @@ can also :ref:`disable CSRF protection on individual forms <form-csrf-customizat
 
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->csrfProtection()
                 ->enabled(true)
             ;
@@ -692,7 +710,7 @@ You can also set ``esi`` to ``true`` to enable it:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->esi()->enabled(true);
         };
 
@@ -734,7 +752,7 @@ is disabled. This can be either a template name or the content itself.
 path
 ....
 
-**type**: ``string`` **default**: ``'/_fragment'``
+**type**: ``string`` **default**: ``/_fragment``
 
 The path prefix for fragments. The fragment listener will only be executed
 when the request starts with this path.
@@ -1091,7 +1109,7 @@ Use ``0`` to not limit the duration.
 max_duration
 ............
 
-**type**: ``float`` **default**: 0
+**type**: ``float`` **default**: ``0``
 
 The maximum execution time, in seconds, that the request and the response are
 allowed to take. A value lower than or equal to 0 means it is unlimited.
@@ -1321,7 +1339,7 @@ requests (and not on the subrequests).
 dsn
 ...
 
-**type**: ``string`` **default**: ``'file:%kernel.cache_dir%/profiler'``
+**type**: ``string`` **default**: ``file:%kernel.cache_dir%/profiler``
 
 The DSN where to store the profiling information.
 
@@ -1426,7 +1444,7 @@ To configure a ``jsonp`` format:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->request()
                 ->format('jsonp', 'application/javascript');
         };
@@ -1535,7 +1553,7 @@ session
 storage_factory_id
 ..................
 
-**type**: ``string`` **default**: ``'session.storage.factory.native'``
+**type**: ``string`` **default**: ``session.storage.factory.native``
 
 The service ID used for creating the ``SessionStorageInterface`` that stores
 the session. This service is available in the Symfony application via the
@@ -1552,7 +1570,7 @@ To see a list of all available storages, run:
 handler_id
 ..........
 
-**type**: ``string`` **default**: ``'session.handler.native_file'``
+**type**: ``string`` **default**: ``session.handler.native_file``
 
 The service id used for session storage. The default value ``'session.handler.native_file'``
 will let Symfony manage the sessions itself using files to store the session metadata.
@@ -1591,7 +1609,7 @@ use ``/``.
 cache_limiter
 .............
 
-**type**: ``string`` or ``int`` **default**: ``''``
+**type**: ``string`` or ``int`` **default**: (an empty string)
 
 If set to ``0``, Symfony won't set any particular header related to the cache
 and it will rely on the cache control method configured in the
@@ -1635,7 +1653,7 @@ Unlike the other session options, ``cache_limiter`` is set as a regular
 cookie_domain
 .............
 
-**type**: ``string`` **default**: ``''``
+**type**: ``string`` **default**: (an empty string)``''``
 
 This determines the domain to set in the session cookie. By default, it's
 blank, meaning the host name of the server which generated the cookie according
@@ -1644,7 +1662,7 @@ to the cookie specification.
 cookie_samesite
 ...............
 
-**type**: ``string`` or ``null`` **default**: ``'lax'``
+**type**: ``string`` or ``null`` **default**: ``lax``
 
 It controls the way cookies are sent when the HTTP request did not originate
 from the same domain that is associated with the cookies. Setting this option is
@@ -1674,7 +1692,7 @@ The possible values for this option are:
 cookie_secure
 .............
 
-**type**: ``boolean`` or ``'auto'`` **default**: ``'auto'``
+**type**: ``boolean`` or ``'auto'`` **default**: ``auto``
 
 This determines whether cookies should only be sent over secure connections. In
 addition to ``true`` and ``false``, there's a special ``'auto'`` value that
@@ -1780,7 +1798,7 @@ setting the value to ``null``:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->session()
                 ->savePath(null);
         };
@@ -1835,7 +1853,7 @@ Whether to enable the session support in the framework.
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->session()
                 ->enabled(true);
         };
@@ -1892,7 +1910,7 @@ This option allows you to define a base path to be used for assets:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 ->basePath('/images');
@@ -1942,7 +1960,7 @@ collection each time it generates an asset's path:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 ->baseUrls(['http://cdn.example.com/']);
@@ -1992,7 +2010,7 @@ You can group assets into packages, to specify different base URLs for them:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 ->package('avatars')
@@ -2068,7 +2086,7 @@ Now, activate the ``version`` option:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 ->version('v2');
@@ -2196,7 +2214,7 @@ individually for each asset package:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 ->versionStrategy('app.asset.my_versioning_strategy');
@@ -2296,7 +2314,7 @@ package:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             // ...
             $framework->assets()
                 // this manifest is applied to every asset (including packages)
@@ -2325,7 +2343,7 @@ package:
 
     If you request an asset that is *not found* in the ``manifest.json`` file, the original -
     *unmodified* - asset path will be returned.
-    Since Symfony 5.4, you can set ``strict_mode`` to ``true`` to get an exception when an asset is *not found*.
+    You can set ``strict_mode`` to ``true`` to get an exception when an asset is *not found*.
 
 .. note::
 
@@ -2492,6 +2510,65 @@ enabled
 validation
 ~~~~~~~~~~
 
+.. _reference-validation-auto-mapping:
+
+auto_mapping
+............
+
+**type**: ``array`` **default**: ``[]``
+
+Defines the Doctrine entities that will be introspected to add
+:ref:`automatic validation constraints <automatic_object_validation>` to them:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        framework:
+            validation:
+                auto_mapping:
+                    # an empty array means that all entities that belong to that
+                    # namespace will add automatic validation
+                    'App\Entity\': []
+                    'Foo\': ['Foo\Some\Entity', 'Foo\Another\Entity']
+
+    .. code-block:: xml
+
+        <!-- config/packages/framework.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:framework="http://symfony.com/schema/dic/symfony"
+            xsi:schemaLocation="http://symfony.com/schema/dic/services
+                https://symfony.com/schema/dic/services/services-1.0.xsd
+                http://symfony.com/schema/dic/symfony https://symfony.com/schema/dic/symfony/symfony-1.0.xsd">
+
+            <framework:config>
+                <framework:validation>
+                    <framework:auto-mapping>
+                        <framework:service namespace="App\Entity\"/>
+
+                        <framework:service namespace="Foo\">Foo\Some\Entity</framework:service>
+                        <framework:service namespace="Foo\">Foo\Another\Entity</framework:service>
+                    </framework:auto-mapping>
+                </framework:validation>
+            </framework:config>
+        </container>
+
+    .. code-block:: php
+
+        // config/packages/framework.php
+        use Symfony\Config\FrameworkConfig;
+
+        return static function (FrameworkConfig $framework): void {
+            $framework->validation()
+                ->autoMapping()
+                    ->paths([
+                        'App\\Entity\\' => [],
+                        'Foo\\' => ['Foo\\Some\\Entity', 'Foo\\Another\\Entity'],
+                    ]);
+        };
+
 .. _reference-validation-enabled:
 
 enabled
@@ -2629,7 +2706,7 @@ the component will look for additional validation files:
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->validation()
                 ->mapping()
                     ->paths(['%kernel.project_dir%/config/validation/']);
@@ -2643,7 +2720,7 @@ annotations
 cache
 .....
 
-**type**: ``string`` **default**: ``'php_array'``
+**type**: ``string`` **default**: ``php_array``
 
 This option can be one of the following values:
 
@@ -2657,7 +2734,7 @@ none
 file_cache_dir
 ..............
 
-**type**: ``string`` **default**: ``'%kernel.cache_dir%/annotations'``
+**type**: ``string`` **default**: ``%kernel.cache_dir%/annotations``
 
 The directory to store cache files for annotations, in case
 ``annotations.cache`` is set to ``'file'``.
@@ -2850,7 +2927,7 @@ This option also accepts a map of PHP errors to log levels:
         use Psr\Log\LogLevel;
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->phpErrors()->log(\E_DEPRECATED, LogLevel::ERROR);
             $framework->phpErrors()->log(\E_USER_DEPRECATED, LogLevel::ERROR);
             // ...
@@ -3005,7 +3082,7 @@ To configure a Redis cache pool with a default lifetime of 1 hour, do the follow
         // config/packages/framework.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->cache()
                 ->pool('cache.mycache')
                     ->adapters(['cache.adapter.redis'])
@@ -3104,6 +3181,12 @@ It's also useful when using `blue/green deployment`_ strategies and more
 generally, when you need to abstract out the actual deployment directory (for
 example, when warming caches offline).
 
+.. note::
+
+    The ``prefix_seed`` option is used at compile time. This means
+    that any change made to this value after container's compilation
+    will have no effect.
+
 .. _reference-lock:
 
 lock
@@ -3165,7 +3248,7 @@ the name as key and DSN as value:
         // config/packages/lock.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->lock()
                 ->resource('default', [env('LOCK_DSN')]);
         };
@@ -3245,7 +3328,7 @@ the name as key and DSN as value:
         // config/packages/semaphore.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->semaphore()
                 ->resource('default', ['%env(SEMAPHORE_DSN)%']);
         };
@@ -3343,8 +3426,8 @@ the `SMTP session`_. This value overrides any other recipient set in the code.
         // config/packages/mailer.php
         namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-        return static function (ContainerConfigurator $containerConfigurator): void {
-            $containerConfigurator->extension('framework', [
+        return static function (ContainerConfigurator $container): void {
+            $container->extension('framework', [
                 'mailer' => [
                     'dsn' => 'smtp://localhost:25',
                     'envelope' => [
@@ -3423,7 +3506,7 @@ A list of workflows to be created by the framework extension:
         // config/packages/workflow.php
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->workflows()
                 ->workflows('my_workflow')
                     // ...
@@ -3476,7 +3559,7 @@ marking_store
 
 Each marking store can define any of these options:
 
-* ``property`` (**type**: ``string`` **default**: ``'marking'``)
+* ``property`` (**type**: ``string`` **default**: ``marking``)
 * ``service`` (**type**: ``string``)
 * ``type`` (**type**: ``string`` **allow value**: ``'method'``)
 
@@ -3581,7 +3664,7 @@ exceptions that match the given exception class:
         use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
         use Symfony\Config\FrameworkConfig;
 
-        return static function (FrameworkConfig $framework) {
+        return static function (FrameworkConfig $framework): void {
             $framework->exception(BadRequestHttpException::class)
                 ->logLevel('debug')
                 ->statusCode(422)

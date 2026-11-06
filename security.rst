@@ -121,16 +121,16 @@ from the `MakerBundle`_:
         #[ORM\Id]
         #[ORM\GeneratedValue]
         #[ORM\Column(type: 'integer')]
-        private $id;
+        private int $id;
 
         #[ORM\Column(type: 'string', length: 180, unique: true)]
-        private $email;
+        private ?string $email;
 
         #[ORM\Column(type: 'json')]
-        private $roles = [];
+        private array $roles = [];
 
         #[ORM\Column(type: 'string')]
-        private $password;
+        private string $password;
 
         public function getId(): ?int
         {
@@ -207,7 +207,7 @@ from the `MakerBundle`_:
         /**
          * @see UserInterface
          */
-        public function eraseCredentials()
+        public function eraseCredentials(): void
         {
             // If you store any temporary, sensitive data on the user, clear it here
             // $this->plainPassword = null;
@@ -272,7 +272,7 @@ for a user provider in your security configuration:
         use App\Entity\User;
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $security->provider('app_user_provider')
@@ -402,7 +402,7 @@ have done this for you:
         use App\Entity\User;
         use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             // Use native password hasher, which auto-selects and migrates the best
@@ -420,11 +420,12 @@ the database::
     namespace App\Controller;
 
     // ...
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
     class RegistrationController extends AbstractController
     {
-        public function index(UserPasswordHasherInterface $passwordHasher)
+        public function index(UserPasswordHasherInterface $passwordHasher): Response
         {
             // ... e.g. get the user data from a registration form
             $user = new User(...);
@@ -534,7 +535,7 @@ will be able to authenticate (e.g. login form, API token, etc).
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
             $security->firewall('dev')
                 ->pattern('^/(_(profiler|wdt)|css|images|js)/')
@@ -611,11 +612,11 @@ use the :class:`Symfony\\Bundle\\SecurityBundle\\Security` service::
             // Avoid calling getFirewallConfig() in the constructor: auth may not
             // be complete yet. Instead, store the entire Security object.
             private Security $security,
-            RequestStack $requestStack,
+            private RequestStack $requestStack,
         ) {
         }
 
-        public function someMethod()
+        public function someMethod(): void
         {
             $request = $this->requestStack->getCurrentRequest();
             $firewallName = $this->security->getFirewallConfig($request)?->getName();
@@ -659,7 +660,7 @@ Form Login
 
 Most websites have a login form where users authenticate using an
 identifier (e.g. email address or username) and a password. This
-functionality is provided by the *form login authenticator*.
+functionality is provided by the built-in :class:`Symfony\\Component\\Security\\Http\Authenticator\\FormLoginAuthenticator`.
 
 First, create a controller for the login form:
 
@@ -690,7 +691,7 @@ First, create a controller for the login form:
         }
     }
 
-Then, enable the form login authenticator using the ``form_login`` setting:
+Then, enable the ``FormLoginAuthenticator`` using the ``form_login`` setting:
 
 .. configuration-block::
 
@@ -734,7 +735,7 @@ Then, enable the form login authenticator using the ``form_login`` setting:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $mainFirewall = $security->firewall('main');
@@ -783,8 +784,8 @@ Edit the login controller to render the login form:
           }
       }
 
-Don't let this controller confuse you. Its job is only to *render* the form:
-the ``form_login`` authenticator will handle the form *submission* automatically.
+Don't let this controller confuse you. Its job is only to *render* the form.
+The ``FormLoginAuthenticator`` will handle the form *submission* automatically.
 If the user submits an invalid email or password, that authenticator will store
 the error and redirect back to this controller, where we read the error (using
 ``AuthenticationUtils``) so that it can be displayed back to the user.
@@ -856,7 +857,7 @@ To review the whole process:
 #. The ``/login`` page renders login form via the route and controller created
    in this example;
 #. The user submits the login form to ``/login``;
-#. The security system (i.e. the ``form_login`` authenticator) intercepts the
+#. The security system (i.e. the ``FormLoginAuthenticator``) intercepts the
    request, checks the user's submitted credentials, authenticates the user if
    they are correct, and sends the user back to the login form if they are not.
 
@@ -918,7 +919,7 @@ First, you need to enable CSRF on the form login:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $mainFirewall = $security->firewall('main');
@@ -1008,7 +1009,7 @@ Enable the authenticator using the ``json_login`` setting:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $mainFirewall = $security->firewall('main');
@@ -1175,7 +1176,7 @@ authentication:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->httpBasic()
                 ->realm('Secured Area')
@@ -1296,7 +1297,7 @@ Then, enable the X.509 authenticator using ``x509`` on your firewall:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->x509()
                 ->provider('your_user_provider')
@@ -1364,7 +1365,7 @@ Enable remote user authentication using the ``remote_user`` key:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $mainFirewall = $security->firewall('main');
             $mainFirewall->remoteUser()
                 ->provider('your_user_provider')
@@ -1444,7 +1445,7 @@ You must enable this using the ``login_throttling`` setting:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $security->enableAuthenticatorManager(true);
 
             $mainFirewall = $security->firewall('main');
@@ -1582,7 +1583,7 @@ and set the ``limiter`` option to its service ID:
         use Symfony\Config\FrameworkConfig;
         use Symfony\Config\SecurityConfig;
 
-        return static function (ContainerBuilder $containerBuilder, FrameworkConfig $framework, SecurityConfig $security) {
+        return static function (ContainerBuilder $container, FrameworkConfig $framework, SecurityConfig $security): void {
             $framework->rateLimiter()
                 ->limiter('username_ip_login')
                     ->policy('token_bucket')
@@ -1598,7 +1599,7 @@ and set the ``limiter`` option to its service ID:
                     ->interval('15 minutes')
             ;
 
-            $containerBuilder->register('app.login_rate_limiter', DefaultLoginRateLimiter::class)
+            $container->register('app.login_rate_limiter', DefaultLoginRateLimiter::class)
                 ->setArguments([
                     // 1st argument is the limiter for IP
                     new Reference('limiter.ip_login'),
@@ -1713,7 +1714,7 @@ To enable logging out, activate the  ``logout`` config parameter under your fire
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $mainFirewall = $security->firewall('main');
@@ -1741,8 +1742,8 @@ Next, you need to create a route for this URL (but not a controller):
 
         class SecurityController extends AbstractController
         {
-            #[Route('/logout', name: 'app_logout', methods: ['GET'])]
-            public function logout()
+            #[Route('/logout', name: 'app_logout', methods: ['POST'])]
+            public function logout(): never
             {
                 // controller can be blank: it will never be called!
                 throw new \Exception('Don\'t forget to activate logout in security.yaml');
@@ -1754,7 +1755,7 @@ Next, you need to create a route for this URL (but not a controller):
         # config/routes.yaml
         app_logout:
             path: /logout
-            methods: GET
+            methods: POST
 
     .. code-block:: xml
 
@@ -1765,7 +1766,7 @@ Next, you need to create a route for this URL (but not a controller):
             xsi:schemaLocation="http://symfony.com/schema/routing
                 https://symfony.com/schema/routing/routing-1.0.xsd">
 
-            <route id="app_logout" path="/logout" methods="GET"/>
+            <route id="app_logout" path="/logout" methods="POST"/>
         </routes>
 
     .. code-block:: php
@@ -1773,9 +1774,9 @@ Next, you need to create a route for this URL (but not a controller):
         // config/routes.php
         use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
-        return function (RoutingConfigurator $routes) {
+        return function (RoutingConfigurator $routes): void {
             $routes->add('app_logout', '/logout')
-                ->methods(['GET'])
+                ->methods(['POST'])
             ;
         };
 
@@ -1818,7 +1819,7 @@ You can logout user programmatically using the ``logout()`` method of the
         }
     }
 
-The user will be logout from the firewall of the request. If the request is
+The user will be logged out from the firewall of the request. If the request is
 not behind a firewall a ``\LogicException`` will be thrown.
 
 Customizing Logout
@@ -1880,6 +1881,7 @@ accessed via the ``getUser()`` shortcut in the
 :ref:`base controller <the-base-controller-class-services>`::
 
     use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+    use Symfony\Component\HttpFoundation\Response;
 
     class ProfileController extends AbstractController
     {
@@ -1920,7 +1922,7 @@ If you need to get the logged in user from a service, use the
         ){
         }
 
-        public function someMethod()
+        public function someMethod(): void
         {
             // returns User object or null if not authenticated
             $user = $this->security->getUser();
@@ -1978,7 +1980,7 @@ database and every user is *always* given at least one role: ``ROLE_USER``::
     class User
     {
         #[ORM\Column(type: 'json')]
-        private $roles = [];
+        private array $roles = [];
 
         // ...
         public function getRoles(): array
@@ -2043,7 +2045,7 @@ rules by creating a role hierarchy:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $security->roleHierarchy('ROLE_ADMIN', ['ROLE_USER']);
@@ -2158,7 +2160,7 @@ start with ``/admin``, you can:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $security->enableAuthenticatorManager(true);
 
             // ...
@@ -2227,7 +2229,7 @@ the list and stops when it finds the first match:
         // config/packages/security.php
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             // ...
 
             $security->accessControl()
@@ -2281,7 +2283,7 @@ will happen:
 
 .. _security-securing-controller-annotations:
 
-Another way to secure one or more controller actions is to use an attribute.
+Another way to secure one or more controller actions is to use the ``#[IsGranted()]`` attribute.
 In the following example, all controller actions will require the
 ``ROLE_ADMIN`` permission, except for ``adminDashboard()``, which will require
 the ``ROLE_SUPER_ADMIN`` permission:
@@ -2360,7 +2362,7 @@ want to include extra details only for users that have a ``ROLE_SALES_ADMIN`` ro
     +     ) {
     +     }
 
-          public function generateReport()
+          public function generateReport(): void
           {
               $salesData = [];
 
@@ -2440,7 +2442,7 @@ the login page):
         use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
         use Symfony\Config\SecurityConfig;
 
-        return static function (SecurityConfig $security) {
+        return static function (SecurityConfig $security): void {
             $security->enableAuthenticatorManager(true);
             // ....
 
@@ -2634,8 +2636,8 @@ for these events.
 
             use App\EventListener\LogoutSubscriber;
 
-            return function(ContainerConfigurator $containerConfigurator) {
-                $services = $containerConfigurator->services();
+            return function(ContainerConfigurator $container): void {
+                $services = $container->services();
 
                 $services->set(LogoutSubscriber::class)
                     ->tag('kernel.event_subscriber', [

@@ -555,7 +555,7 @@ represented by a PHP callable instead of a string::
     use Symfony\Component\HttpFoundation\StreamedResponse;
 
     $response = new StreamedResponse();
-    $response->setCallback(function () {
+    $response->setCallback(function (): void {
         var_dump('Hello World');
         flush();
         sleep(2);
@@ -790,7 +790,7 @@ methods. You can inject this as a service anywhere in your application::
         ) {
         }
 
-        public function normalize($user)
+        public function normalize($user): array
         {
             return [
                 'avatar' => $this->urlHelper->getAbsoluteUrl($user->avatar()->path()),

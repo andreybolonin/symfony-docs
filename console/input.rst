@@ -337,7 +337,7 @@ To achieve this, use the 5th argument of ``addArgument()``/``addOption``::
                     InputArgument::IS_ARRAY,
                     'Who do you want to greet (separate multiple names with a space)?',
                     null,
-                    function (CompletionInput $input) {
+                    function (CompletionInput $input): array {
                         // the value the user already typed, e.g. when typing "app:greet Fa" before
                         // pressing Tab, this will contain "Fa"
                         $currentValue = $input->getCompletionValue();
@@ -378,7 +378,7 @@ Testing the Completion script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Console component comes with a special
-:class:`Symfony\\Component\\Console\\Tester\\CommandCompletionTester`` class
+:class:`Symfony\\Component\\Console\\Tester\\CommandCompletionTester` class
 to help you unit test the completion logic::
 
     // ...
@@ -386,7 +386,7 @@ to help you unit test the completion logic::
 
     class GreetCommandTest extends TestCase
     {
-        public function testComplete()
+        public function testComplete(): void
         {
             $application = new Application();
             $application->add(new GreetCommand());

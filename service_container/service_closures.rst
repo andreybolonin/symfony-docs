@@ -49,6 +49,9 @@ argument of type ``service_closure``:
             App\Service\MyService:
                 arguments: [!service_closure '@mailer']
 
+                # In case the dependency is optional
+                # arguments: [!service_closure '@?mailer']
+
     .. code-block:: xml
 
         <!-- config/services.xml -->
@@ -60,6 +63,11 @@ argument of type ``service_closure``:
             <services>
                 <service id="App\Service\MyService">
                     <argument type="service_closure" id="mailer"/>
+
+                    <!--
+                    In case the dependency is optional
+                    <argument type="service_closure" id="mailer" on-invalid="ignore"/>
+                    -->
                 </service>
             </services>
         </container>
@@ -71,8 +79,8 @@ argument of type ``service_closure``:
 
         use App\Service\MyService;
 
-        return function (ContainerConfigurator $containerConfigurator) {
-            $services = $containerConfigurator->services();
+        return function (ContainerConfigurator $container): void {
+            $services = $container->services();
 
             $services->set(MyService::class)
                 ->args([service_closure('mailer')]);
@@ -98,7 +106,7 @@ a service closure by wrapping the service reference into an instance of
     use Symfony\Component\DependencyInjection\ContainerBuilder;
     use Symfony\Component\DependencyInjection\Reference;
 
-    public function process(ContainerBuilder $containerBuilder): void
+    public function process(ContainerBuilder $container): void
     {
         // ...
 
